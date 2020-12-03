@@ -1,14 +1,19 @@
 class PasswordListAnalyzer
-  attr_reader :policy
+  attr_reader :corruption_detector
 
-  def initialize(policy)
-    @policy = policy
+  def initialize(corruption_detector:)
+    @corruption_detector = corruption_detector
   end
 
-  def find
-    tagged_passwords = password_list.map { |list_item|  TaggedPassword.new(list_item) }
+  def valid_passwords
+    classify_passwords.filter { |p| p[:valid] }
+  end
 
-    corruption_detector = create_corruption_detector
+  private
+
+  attr_reader :passwords
+
+  def classify_passwords
     tagged_passwords.map do |tp|
       {
         password: tp.password,
@@ -17,24 +22,8 @@ class PasswordListAnalyzer
     end
   end
 
-  private
-
-  def create_corruption_detector
-    if (policy == :sled)
-      create_sled_hire_corruption_detector
-    elsif (policy == :toboggan)
-      create_toboggan_hire_corruption_detector
-    else
-      raise "Invalid Policy!"
-    end
-  end
-
-  def create_sled_hire_corruption_detector
-    SledHireCorruptionDetector.new
-  end
-
-  def create_toboggan_hire_corruption_detector
-    TobogganHireCorruptionDetector.new
+  def tagged_passwords
+    @tagged_passwords ||= password_list.map { |list_item|  TaggedPassword.new(list_item) }
   end
 
   def password_list
@@ -93,12 +82,12 @@ class TaggedPassword
   end
 end
 
-sled_hire_analyzer = PasswordListAnalyzer.new(:sled)
-valid_sled_passwords = sled_hire_analyzer.find.filter { |p| p[:valid] }
+sled_hire_analyzer = PasswordListAnalyzer.new(
+  corruption_detector: SledHireCorruptionDetector.new
+)
+toboggan_hire_analyzer = PasswordListAnalyzer.new(
+  corruption_detector: TobogganHireCorruptionDetector.new
+)
 
-print "Valid sled hire passwords: " + valid_sled_passwords.count.to_s + "\n"
-
-toboggan_hire_analyzer = PasswordListAnalyzer.new(:toboggan)
-valid_toboggan_passwords = toboggan_hire_analyzer.find.filter { |p| p[:valid] }
-
-print "Valid sled hire passwords: " + valid_toboggan_passwords.count.to_s + "\n"
+print "Valid sled hire passwords: " + sled_hire_analyzer.valid_passwords.count.to_s + "\n"
+print "Valid toboggan hire passwords: " + toboggan_hire_analyzer.valid_passwords.count.to_s + "\n"
