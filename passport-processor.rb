@@ -28,55 +28,120 @@ class PassportReport
   attr_reader :valid
 end
 
-class PassportValidityScanner
+class PassportRequirementScanner
+  attr_reader :passport
+
   def scan(passport:)
-    PassportReport.new(
-      passport: passport,
-      valid: passport_valid?(passport: passport)
-    )
+    @passport = passport
+    required_fields_present?
   end
 
   private
 
-  def passport_valid?(passport:)
+  def required_fields_present?
     [
-      passport.byr,
-      passport.iyr,
-      passport.eyr,
-      passport.hgt,
-      passport.hcl,
-      passport.ecl,
-      passport.pid,
-      passport.cid
-    ].reduce(true) { |acc, attr| acc && !!attr }
+      passport.byr[:value],
+      passport.iyr[:value],
+      passport.eyr[:value],
+      passport.hgt[:value],
+      passport.hcl[:value],
+      passport.ecl[:value],
+      passport.pid[:value],
+      passport.cid[:value]
+    ].reduce(true) { |acc, attr| acc && !attr.nil? }
   end
 end
 
-class AlteredPassportValidityScanner
+class AlteredPassportRequirementScanner
+  attr_reader :passport
+
   def scan(passport:)
-    PassportReport.new(
-      passport: passport,
-      valid: passport_valid?(passport: passport)
-    )
+    @passport = passport
+    required_fields_present?
   end
 
   private
 
-  def passport_valid?(passport:)
+  def required_fields_present?
     [
-      passport.byr,
-      passport.iyr,
-      passport.eyr,
-      passport.hgt,
-      passport.hcl,
-      passport.ecl,
-      passport.pid
-    ].reduce(true) { |acc, attr| acc && !!attr }
+      passport.byr[:value],
+      passport.iyr[:value],
+      passport.eyr[:value],
+      passport.hgt[:value],
+      passport.hcl[:value],
+      passport.ecl[:value],
+      passport.pid[:value]
+    ].reduce(true) { |acc, attr| acc && !attr.nil? }
+  end
+end
+
+class PassportValidityScanner
+  attr_reader :passport
+
+  def scan(passport:)
+    @passport = passport
+    fields_valid?
+  end
+
+  private
+
+  def fields_valid?
+    [
+      byr_valid?,
+      iyr_valid?,
+      eyr_valid?,
+      hgt_valid?,
+      hcl_valid?,
+      ecl_valid?,
+      pid_valid?,
+      cid_valid?
+    ].reduce(:&)
+  end
+
+  def byr_valid?
+    byr = passport.byr[:value]
+    !byr.nil? && byr.between?(1920, 2002)
+  end
+
+  def iyr_valid?
+    iyr = passport.iyr[:value]
+    !iyr.nil? && iyr.between?(2010, 2020)
+  end
+
+  def eyr_valid?
+    eyr = passport.eyr[:value]
+    !eyr.nil? && eyr.between?(2020, 2030)
+  end
+
+  def hgt_valid?
+    hgt = passport.hgt[:value]
+    return false if hgt.nil? || passport.hgt[:unit].nil?
+    return hgt.between?(150, 193) if passport.hgt[:unit] == :cm
+    return hgt.between?(59, 76) if passport.hgt[:unit] == :inches
+
+    false
+  end
+
+  def hcl_valid?
+    /^#[0-9a-f]{6}$/.match?(passport.hcl[:value])
+  end
+
+  def ecl_valid?
+    %w(amb blu brn gry grn hzl oth).include?(passport.ecl[:value])
+  end
+
+  def pid_valid?
+    /^\d{9}$/.match?(passport.pid[:value])
+  end
+
+  def cid_valid?
+    true
   end
 end
 
 class PassportBatchProcessor
-  def initialize(validity_scanner:, raw_passport_data:)
+  def initialize(requirement_scanner:, validity_scanner:, raw_passport_data:)
+    @requirement_scanner = requirement_scanner
     @validity_scanner = validity_scanner
     @passports = process_passport_data(raw_passport_data: raw_passport_data)
 
@@ -97,11 +162,14 @@ class PassportBatchProcessor
 
   private
 
-  attr_reader :validity_scanner, :passports, :validity_report
+  attr_reader :requirement_scanner, :validity_scanner, :passports, :validity_report
 
   def generate_report
     passports.map do |p|
-      validity_scanner.scan(passport: p)
+      PassportReport.new(
+        passport: p,
+        valid: requirement_scanner.scan(passport: p) && validity_scanner.scan(passport: p)
+      )
     end
   end
 
@@ -115,15 +183,76 @@ class PassportBatchProcessor
 
   def generate_passport(passport_attributes:)
     Passport.new(
-      byr: passport_attributes[:byr],
-      iyr: passport_attributes[:iyr],
-      eyr: passport_attributes[:eyr],
-      hgt: passport_attributes[:hgt],
-      hcl: passport_attributes[:hcl],
-      ecl: passport_attributes[:ecl],
-      pid: passport_attributes[:pid],
-      cid: passport_attributes[:cid]
+      byr: generate_byr(byr: passport_attributes[:byr]),
+      iyr: generate_iyr(iyr: passport_attributes[:iyr]),
+      eyr: generate_eyr(eyr: passport_attributes[:eyr]),
+      hgt: generate_hgt(hgt: passport_attributes[:hgt]),
+      hcl: generate_hcl(hcl: passport_attributes[:hcl]),
+      ecl: generate_ecl(ecl: passport_attributes[:ecl]),
+      pid: generate_pid(pid: passport_attributes[:pid]),
+      cid: generate_cid(cid: passport_attributes[:cid])
     )
+  end
+
+  def generate_byr(byr:)
+    {
+      value: !byr.nil? ? byr.to_i : nil,
+      type: :year
+    }
+  end
+
+  def generate_iyr(iyr:)
+    {
+      value: !iyr.nil? ? iyr.to_i : nil,
+      type: :year
+    }
+  end
+
+  def generate_eyr(eyr:)
+    {
+      value: !eyr.nil? ? eyr.to_i : nil,
+      type: :year
+    }
+  end
+
+  def generate_hgt(hgt:)
+    hgtUnit = nil
+    hgtUnit = :cm if /cm$/.match?(hgt)
+    hgtUnit = :inches if /in$/.match?(hgt)
+
+    {
+      value: (!hgt.nil?) ? hgt.sub(/cm|in/, '').to_i : nil,
+      unit: hgtUnit,
+      type: :measurement
+    }
+  end
+
+  def generate_hcl(hcl:)
+    {
+      value: !hcl.nil? ? hcl : nil,
+      type: :hex_color
+    }
+  end
+
+  def generate_ecl(ecl:)
+    {
+      value: !ecl.nil? ? ecl : nil,
+      type: :color
+    }
+  end
+
+  def generate_pid(pid:)
+    {
+      value: !pid.nil? ? pid : nil,
+      type: :id_number
+    }
+  end
+
+  def generate_cid(cid:)
+    {
+      value: !cid.nil? ? cid : nil,
+      type: :id_number
+    }
   end
 
   def process_raw_attributes(raw_passport_lines:)
@@ -148,6 +277,7 @@ end
 
 
 batch_processor = PassportBatchProcessor.new(
+  requirement_scanner: PassportRequirementScanner.new,
   validity_scanner: PassportValidityScanner.new,
   raw_passport_data: File.read('input-data/passport-data.txt'),
 )
@@ -159,8 +289,9 @@ print "And with a slight tweak...\n"
 print "\n"
 
 alternative_batch_processor = PassportBatchProcessor.new(
-  validity_scanner: AlteredPassportValidityScanner.new,
-  raw_passport_data: File.read('input-data/passport-data.txt'),
+  requirement_scanner: AlteredPassportRequirementScanner.new,
+  validity_scanner: PassportValidityScanner.new,
+  raw_passport_data: File.read('input-data/passport-data.txt')
 )
 print "Number of \"passports\" processed: " + alternative_batch_processor.num_passports.to_s + "\n"
 print "Number of (almost) valid passports: " + alternative_batch_processor.num_valid_passports.to_s + "\n"
