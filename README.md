@@ -28,3 +28,8 @@ I thought I'd split up the value of each field into an object with a "type" and 
 I was missing a `&&` so it was only returning the second line 🤦‍♂ saw that about 2 mins into debugging the next day. I've switched it to use `reduce(:&)` purely because it means less chance of error.
 
 Also, need to chat to my ruby friends to see what the main alternative to an abstract class is. Would have loved a `BaseValidityScanner` class or something but it doesn't seem to be a recommended approach from the brief searching I've done.
+
+### Day 5 - ✅
+Due to being quite busy the last few days, I completed Challenge 1 but had to wait a few days to get to Challenge 2. The most interesting thing about this Challenge was getting the abstraction right for reusing the algorithm to process the seat rows and seat columns. Defining the different symbols for each case as constructor arguments for my `SeatCodeParser` meant that I could use that object to figure out both row and column.
+
+This was the first Challenge that I wrote any tests for as well. The way the Challenge was written presented some test cases so nicely I couldn't resist. Made doing the range splitting a breeze and I could work away at the algorithm using a bit of trial and error because that stuff always breaks my brain 🧠

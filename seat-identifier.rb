@@ -86,10 +86,63 @@ class SeatCodeParser
   end
 end
 
+class SeatFinder
+  def find_my_seat(seat_positions:)
+    seats_in_rows = sort_into_rows(seat_positions: seat_positions)
+
+    find_empty_seat(seats_in_rows: seats_in_rows)
+  end
+
+  private
+
+  SEATS_PER_ROW = 8
+
+  def find_empty_seat(seats_in_rows:)
+    seats_in_rows.each do |row, seats|
+      if seats.length == SEATS_PER_ROW - 1
+        empty_seat = seats.reduce(0) do |acc, filled_seat|
+          next acc + 1 if filled_seat.to_i == acc
+
+          acc
+        end
+
+        return {
+          row: row,
+          column: empty_seat.to_s
+        }
+      end
+    end
+  end
+
+  def sort_into_rows(seat_positions:)
+    seat_positions.sort_by { |pos| pos[:row] }.reduce({}) do |acc, pos|
+      if acc[pos[:row].to_s].nil?
+        acc[pos[:row].to_s] = [pos[:column]]
+      else
+        acc[pos[:row].to_s].push(pos[:column])
+        acc[pos[:row].to_s] = acc[pos[:row].to_s].sort
+      end
+
+      acc
+    end
+  end
+end
+
+class MagicSeatNumberGenerator
+  def self.shazam(row, column)
+    (row * 8) + column
+  end
+end
+
 processor = SeatBatchProcessor.new
 
 seat_positions = processor.seat_positions
-magic_seat_numbers = seat_positions.map { |pos| (pos[:row] * 8) + pos[:column] }
+magic_seat_numbers = seat_positions.map { |pos| MagicSeatNumberGenerator.shazam(pos[:row], pos[:column]) }
 
 print "Seat codes processed: " + seat_positions.count.to_s + "\n"
-print "Highest seat id: " + magic_seat_numbers.max.to_s + "\n"
+print "Highest seat id: " + magic_seat_numbers.max.to_s + "\n\n"
+
+seat_finder = SeatFinder.new
+seat = seat_finder.find_my_seat(seat_positions: seat_positions)
+print "My seat must be: Row " + seat[:row] + " Seat no. " + seat[:column] + "\n"
+print "and my seat id must be: " + MagicSeatNumberGenerator.shazam(seat[:row].to_i, seat[:column].to_i).to_s + "\n"
