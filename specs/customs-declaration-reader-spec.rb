@@ -49,4 +49,28 @@ RSpec.describe CustomsDataCalculator do
       expect(customs_data_calculator.num_uniq_questions_answered_by_group(group: group3)).to eq 5
     end
   end
+
+  describe 'num_common_questions_answered_by_plane' do
+    specify do
+      expect(customs_data_calculator.num_common_questions_answered_by_plane(groups: [
+        group1,
+        group2,
+        group3
+      ])).to eq 5
+    end
+  end
+
+  describe 'num_common_questions_answered_by_group' do
+    specify do
+      expect(customs_data_calculator.num_common_questions_answered_by_group(group: group1)).to eq 0
+    end
+
+    specify do
+      expect(customs_data_calculator.num_common_questions_answered_by_group(group: group2)).to eq 3
+    end
+
+    specify do
+      expect(customs_data_calculator.num_common_questions_answered_by_group(group: group3)).to eq 2
+    end
+  end
 end

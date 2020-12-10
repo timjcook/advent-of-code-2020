@@ -33,6 +33,26 @@ class CustomsDataCalculator
       .uniq
       .count
   end
+
+  def self.num_common_questions_answered_by_plane(groups:)
+    groups
+      .map { |g| self.num_common_questions_answered_by_group(group: g) }
+      .reduce(:+)
+  end
+
+  def self.num_common_questions_answered_by_group(group:)
+    num_travellers = group.travellers.length
+    all_answers = group
+      .travellers
+      .map { |traveller| traveller.customs_data }
+      .flatten
+
+    common_answers = all_answers.keep_if do |answer|
+      all_answers.clone.keep_if { |d| d == answer }.count == num_travellers
+    end
+
+    common_answers.uniq.count
+  end
 end
 
 class CustomsDeclarationReader
@@ -62,4 +82,5 @@ end
 reader = CustomsDeclarationReader.new
 groups_on_plane = reader.read
 
-print 'Group score: ' + CustomsDataCalculator.num_uniq_questions_answered_by_plane(groups: groups_on_plane).to_s + "\n"
+print 'Uniq questions - group score: ' + CustomsDataCalculator.num_uniq_questions_answered_by_plane(groups: groups_on_plane).to_s + "\n"
+print 'Common questions - group score: ' + CustomsDataCalculator.num_common_questions_answered_by_plane(groups: groups_on_plane).to_s + "\n"

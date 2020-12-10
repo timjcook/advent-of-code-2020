@@ -33,3 +33,10 @@ Also, need to chat to my ruby friends to see what the main alternative to an abs
 Due to being quite busy the last few days, I completed Challenge 1 but had to wait a few days to get to Challenge 2. The most interesting thing about this Challenge was getting the abstraction right for reusing the algorithm to process the seat rows and seat columns. Defining the different symbols for each case as constructor arguments for my `SeatCodeParser` meant that I could use that object to figure out both row and column.
 
 This was the first Challenge that I wrote any tests for as well. The way the Challenge was written presented some test cases so nicely I couldn't resist. Made doing the range splitting a breeze and I could work away at the algorithm using a bit of trial and error because that stuff always breaks my brain 🧠
+
+### Day 6 - ✅
+These Challenges was pretty easy if I'm being honest. I think the key here was knowing what array methods are available in ruby and letting them do all the work. `uniq`, `flatten` and `keep_if` came in handy for me although I'm sure there are some other methods that could be subbed in. I liked my method of finding the common answer for each Traveller, pretty simple, count the number of travellers, `x`, flatten the answers into one array and check for each answer if it appears `x` times.
+
+Proved to be another win for writing tests for the more complex aspects of the Challenge, the `Calculator` in this case.
+
+I've also noticed my heavy usage of `reduce`, there is not much you can't do with it. I am officially going to award it "method of the week", well done `reduce` 🥇
