@@ -40,3 +40,10 @@ These Challenges was pretty easy if I'm being honest. I think the key here was k
 Proved to be another win for writing tests for the more complex aspects of the Challenge, the `Calculator` in this case.
 
 I've also noticed my heavy usage of `reduce`, there is not much you can't do with it. I am officially going to award it "method of the week", well done `reduce` 🥇
+
+### Day 7 - ✅
+This one required getting the recursion right. I defined two classes, a `Bag` and a `Rule` class as the core data structures. Because a `Rule` was associated with another `Bag` I thought I might be able to generate all the `Bag`s and then store an instance of a `Bag` for each `Rule`, but it took forever when I tried to run it. Ended up just storing the `colour` string associated with the `Bag` and did a look up each time.
+
+Perhaps didn't quite dish out the responsibilities perfectly regarding what is in charge of looking up bags based on a colour but 🤷‍♀️ it didn't seem like a big deal.
+
+Setting up well for Challenge 1 meant that a quick spec and a new method on the `BagChecker` resulted in a solution 🙌

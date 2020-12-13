@@ -12,11 +12,11 @@ class Bag
 end
 
 class Rule
-  attr_reader :colour
+  attr_reader :colour, :number
 
   def initialize(colour:, number:)
     @colour = colour
-    @number = number
+    @number = number.to_i
   end
 end
 
@@ -99,6 +99,10 @@ class BagChecker
     bags_that_can_contain_subject(subject: subject).count
   end
 
+  def num_bags_that_are_contained_in_subject(subject:)
+    num_bags_within_bag(bag: subject)
+  end
+
   def bags_that_can_contain_subject(subject:)
     bags.filter do |bag|
       bag_can_contain_subject?(subject: subject, bag: bag)
@@ -111,6 +115,17 @@ class BagChecker
 
   def find_bag_by_colour(colour:)
     bags.select { |b| b.colour == colour }.first
+  end
+
+  def num_bags_within_bag(bag:)
+    return 0 if bag.rules.count == 0
+
+    bag.rules.reduce(0) do |acc, rule|
+      rule_bag = find_bag_by_colour(colour: rule.colour)
+      return acc if rule_bag.nil?
+
+      acc + (rule.number + (rule.number * num_bags_within_bag(bag: rule_bag)))
+    end
   end
 
   def bag_can_contain_subject?(subject:, bag:)
@@ -129,7 +144,8 @@ end
 
 bag_generator = BagGenerator.new
 bags = bag_generator.run
-my_bag = Bag.new(colour: 'shiny gold')
+my_bag = bags.select { |b| b.colour == 'shiny gold' }.first
 
 bag_checker = BagChecker.new(bags: bags)
 print "Number of bags that can contain mine: ", bag_checker.num_bags_that_can_contain_subject(subject: my_bag), "\n"
+print "Number of bags that my bag contains: ", bag_checker.num_bags_that_are_contained_in_subject(subject: my_bag), "\n"
