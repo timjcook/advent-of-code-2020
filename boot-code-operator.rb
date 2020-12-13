@@ -1,5 +1,6 @@
 class BootCode
-  attr_reader :code, :value
+  attr_reader :value
+  attr_accessor :code
 
   def initialize(code:, value:)
     @code = code
@@ -35,7 +36,7 @@ class BootCodeOperator
   end
 
   def execute
-    while position < codes.count - 1
+    while position < codes.count
       code = codes[position]
       return if executed_codes.include?(code)
 
@@ -43,6 +44,10 @@ class BootCodeOperator
 
       execute_code(code: code)
     end
+  end
+
+  def ran_to_completion?
+    position == codes.count
   end
 
   private
@@ -76,10 +81,73 @@ class BootCodeOperator
   end
 end
 
+class BootCodeFixer
+  attr_reader :codes, :current_operator
+
+  def initialize(codes:)
+    @codes = codes
+    @position = 0
+    @current_operator = nil
+  end
+
+  def fix_corruption
+    @current_operator = BootCodeOperator.new(codes:codes)
+    while position < codes.count
+      code = codes[position]
+
+      if code.code == 'jmp' || code.code == 'nop'
+        @current_operator = BootCodeOperator.new(
+          codes: fixed_codes_possibility(
+            code: code,
+            position: position
+          )
+        )
+        @current_operator.execute
+        return if @current_operator.ran_to_completion?
+      end
+
+      @position += 1
+    end
+
+    @current_operator = nil
+  end
+
+  private
+
+  attr_reader :position
+
+  def fixed_codes_possibility(code:, position:)
+    possible_codes = codes.clone
+
+    if (code.code == 'jmp')
+      possible_codes[position] = BootCode.new(
+        code: 'nop',
+        value: code.value
+      )
+    else
+      possible_codes[position] = BootCode.new(
+        code: 'jmp',
+        value: code.value
+      )
+    end
+
+    possible_codes
+  end
+end
+
 reader = BootCodeReader.new
 codes = reader.read
 
 operator = BootCodeOperator.new(codes: codes)
 operator.execute
 
-print 'Last acc value was: ', operator.acc, "\n"
+print 'Infinite loop - Last acc value was: ', operator.acc, "\n"
+
+fixer = BootCodeFixer.new(codes: codes)
+fixer.fix_corruption
+
+unless fixer.current_operator.nil?
+  print 'Infinite loop fix - Last acc value was: ', fixer.current_operator.acc, "\n"
+else
+  print "Infinite loop fix - No fix found :(\n"
+end

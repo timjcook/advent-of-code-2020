@@ -47,3 +47,8 @@ This one required getting the recursion right. I defined two classes, a `Bag` an
 Perhaps didn't quite dish out the responsibilities perfectly regarding what is in charge of looking up bags based on a colour but 🤷‍♀️ it didn't seem like a big deal.
 
 Setting up well for Challenge 1 meant that a quick spec and a new method on the `BagChecker` resulted in a solution 🙌
+
+### Day 8 - ✅
+Was trying to smash this one out and was reasonably successful. I like the structure of having an operator that would run any set of boot codes and then a fixer that would flip one code out of the set and create a new operator and see if it worked. Nothing fancy but worked a treat!
+
+Nearly brought myself undone by an indexing issue on the while loop running in the operator. It was never actually getting to the end because of a misplaced `- 1`, oops! Luckily indexes counting is on my list of "things to check before I start questioning core methods" 😅
