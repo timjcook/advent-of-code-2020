@@ -40,7 +40,11 @@ class NumberValidityChecker
 end
 
 class StreamScanner
-  def self.scan_for_invalid_numbers(stream:)
+  def initialize(stream:)
+    @stream = stream
+  end
+
+  def scan_for_invalid_numbers
     stream[25..].filter.with_index do |number, index|
       preamble = Preamble.new(
         numbers: stream[index..(index + 24)]
@@ -53,8 +57,46 @@ class StreamScanner
       !checker.valid?
     end
   end
+
+  def scan_for_encryption_weakness_number
+    invalid_number = scan_for_invalid_numbers.first
+
+    stream.each.with_index do |number, index|
+      contiguous_set = scan_neighbours_for_encryption_weakness(
+        number_index: index,
+        invalid_number: invalid_number
+      )
+
+      unless contiguous_set.nil?
+        sorted_contiguous_set = contiguous_set.sort
+        return sorted_contiguous_set.first + sorted_contiguous_set.last
+      end
+    end
+
+    raise 'Could not find encryption weakness'
+  end
+
+  def scan_neighbours_for_encryption_weakness(number_index:, invalid_number:)
+    sum = 0
+    neighbour_index = 0
+    while sum < invalid_number do
+      newest_neighbour_index = number_index + neighbour_index
+      sum += stream[newest_neighbour_index]
+
+      return stream[number_index..newest_neighbour_index] if sum == invalid_number
+
+      neighbour_index += 1
+    end
+  end
+
+  private
+
+  attr_reader :stream
 end
 
 reader = StreamReader.new
 stream = reader.read
-print 'The first invalid number is: ', StreamScanner.scan_for_invalid_numbers(stream: stream).first, "\n"
+scanner = StreamScanner.new(stream: stream)
+
+print 'The first invalid number is: ', scanner.scan_for_invalid_numbers.first, "\n"
+print 'The encryption weakness number is: ', scanner.scan_for_encryption_weakness_number, "\n"

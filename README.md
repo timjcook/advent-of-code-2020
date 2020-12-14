@@ -52,3 +52,8 @@ Setting up well for Challenge 1 meant that a quick spec and a new method on the 
 Was trying to smash this one out and was reasonably successful. I like the structure of having an operator that would run any set of boot codes and then a fixer that would flip one code out of the set and create a new operator and see if it worked. Nothing fancy but worked a treat!
 
 Nearly brought myself undone by an indexing issue on the while loop running in the operator. It was never actually getting to the end because of a misplaced `- 1`, oops! Luckily indexes counting is on my list of "things to check before I start questioning core methods" 😅
+
+### Day 9 - ✅
+Using ruby made Challenge 1 straightforward. I could generate a set of combinations for the preamble using the `combination` method available on ruby `Array`s (I learnt about that one back in Day 1 or 2).
+
+I think the trick for Challenge 2 was if you tried to use a similar approach and generate a set of combinations and iterate through them all to find the one that summed to the goal number, it would take forever. I decided to just work each number, summing it's neighbour and then the next neighbour, until it either summed to the goal or exceeded it. If it exceeded, then on to the next number in the stream 🏞
