@@ -57,3 +57,16 @@ Nearly brought myself undone by an indexing issue on the while loop running in t
 Using ruby made Challenge 1 straightforward. I could generate a set of combinations for the preamble using the `combination` method available on ruby `Array`s (I learnt about that one back in Day 1 or 2).
 
 I think the trick for Challenge 2 was if you tried to use a similar approach and generate a set of combinations and iterate through them all to find the one that summed to the goal number, it would take forever. I decided to just work each number, summing it's neighbour and then the next neighbour, until it either summed to the goal or exceeded it. If it exceeded, then on to the next number in the stream 🏞
+
+### Day 10 - ✅ - [check it out!](https://github.com/timjcook/advent-of-code-2020/blob/master/joltage-adapter-combiner.rb)
+Challenge 1 of Day 10 was straightforward, I was able to annotate the adapters in the chain with the "joltage increase" for each step by sorting and iterating through the list.
+
+Challenge 2 however presented a much more difficult problem. My initial, knee-jerk reaction was to write a script that just computed all of the different combinations and then counted them. I probably should have taken heed of the note in the challenge descriptions that there would be more than a trillion options because although I was pretty sure I had a solution that would eventually generate all the combinations, when I started running it, it took was taking forever. I never tried to run it to completion because that wasn't very satisfactory for me.
+
+I changed tact from there figured that it didn't matter what the different combinations were, I was just after the total count. It was convenient that the adapters only ever jumped in one or three joltage increments. I figured that if I divided the sorted set of adapters into groups, where each group contained consecutive or one joltage increment adapters and a three joltage jump started a new group, then I could figure out how many new combinations each group would add to the total number of combinations.
+
+In each group the first and last adapters needed to be used, otherwise you couldn't make it to the next group. How many consecutive adapters was what contributed, a group of 3 only had 2 combinations, 4 would add 4 new combinations and 5 would add 7 new combinations. I wrote a little `CombinationScorer` class that used binary representations of numbers to represent each adapter in a group and would filter out invalid configurations within that group (ie in a group of 5, `10001` would be invalid because that skips too many adapters in the middle to work).
+
+Once each group had a score, I multiplied them all together to find the total number of combinations 🎉 It was running in a fraction of a section as well instead of taking forever like my original solution. It didn't quite get me the right answer first go but that was because I didn't factor in combinations at the very start of the sequence, where the `1` adapter was skipped and went straight to `2`. Easy fix and another completed challenge.
+
+I'm not sure how well this would scale to handle more variations, like a joltage increment of 2 where my rules above would change. I assume through with some tweaking it would be fit for those cases as well though. No idea how others solved it but I'm pretty proud of this 🙌
