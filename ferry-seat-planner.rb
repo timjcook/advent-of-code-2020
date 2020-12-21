@@ -94,7 +94,7 @@ class TileState
 end
 
 class SeatingSimulator
-  def generate_next_state(tile_state:)
+  def generate_next_state_for_adjacent(tile_state:)
     new_state = tile_state.tiles.map.with_index do |row, row_index|
       row.map.with_index do |tile, tile_index|
         adjacent_tiles = find_adjacent_tiles(
@@ -104,7 +104,27 @@ class SeatingSimulator
         )
         next_tile_state(
           tile: tile,
-          adjacent_tiles: adjacent_tiles
+          dependent_tiles: adjacent_tiles,
+          num_occupied: 4
+        )
+      end
+    end
+
+    TileState.new(tiles: new_state)
+  end
+
+  def generate_next_state_for_visible(tile_state:)
+    new_state = tile_state.tiles.map.with_index do |row, row_index|
+      row.map.with_index do |tile, tile_index|
+        visible_seats = find_visible_seats(
+          current_tile_state: tile_state,
+          row_index: row_index,
+          tile_index: tile_index
+        )
+        next_tile_state(
+          tile: tile,
+          dependent_tiles: visible_seats,
+          num_occupied: 5
         )
       end
     end
@@ -116,23 +136,26 @@ class SeatingSimulator
 
   def next_tile_state(
     tile:,
-    adjacent_tiles:
+    dependent_tiles:,
+    num_occupied:
   )
     return Tile.new(type: :floor, occupied: false) if tile.floor?
 
-    Tile.new(type: :seat, occupied: next_tile_occupied?(
+    Tile.new(type: :seat, occupied: occupied_dependent_tiles?(
       tile: tile,
-      adjacent_tiles: adjacent_tiles
+      dependent_tiles: dependent_tiles,
+      num_occupied: num_occupied
     ))
   end
 
-  def next_tile_occupied?(
+  def occupied_dependent_tiles?(
     tile:,
-    adjacent_tiles:
+    dependent_tiles:,
+    num_occupied:
   )
-    return adjacent_tiles.all? { |tile| tile.empty? } if tile.empty?
+    return dependent_tiles.all? { |tile| tile.empty? } if tile.empty?
 
-    adjacent_tiles.filter { |tile| tile.occupied? }.count < 4
+    dependent_tiles.filter { |tile| tile.occupied? }.count < num_occupied
   end
 
   def find_adjacent_tiles(
@@ -156,13 +179,68 @@ class SeatingSimulator
       (has_next_row && has_next_tile) ? current_tile_state.tiles[row_index + 1][tile_index + 1] : nil
     ].compact
   end
+
+  def find_visible_seats(
+    current_tile_state:,
+    row_index:,
+    tile_index:
+  )
+    options = {
+      current_tile_state: current_tile_state,
+      starting_x: tile_index,
+      starting_y: row_index
+    }
+    [
+      explore_line_of_sight(**options) { |x, y| { x: x - 1, y: y - 1 } },
+      explore_line_of_sight(**options) { |x, y| { x: x, y: y - 1 } },
+      explore_line_of_sight(**options) { |x, y| { x: x + 1, y: y - 1 } },
+      explore_line_of_sight(**options) { |x, y| { x: x - 1, y: y } },
+      explore_line_of_sight(**options) { |x, y| { x: x + 1, y: y } },
+      explore_line_of_sight(**options) { |x, y| { x: x - 1, y: y + 1 } },
+      explore_line_of_sight(**options) { |x, y| { x: x, y: y + 1 } },
+      explore_line_of_sight(**options) { |x, y| { x: x + 1, y: y + 1 } }
+    ].compact
+  end
+
+  def explore_line_of_sight(current_tile_state:, starting_x:, starting_y:)
+    visible_seat = nil
+    current_tiles = current_tile_state.tiles
+
+    x = starting_x
+    y = starting_y
+
+    loop do
+      updated_positions = yield(x, y)
+      x = updated_positions[:x]
+      y = updated_positions[:y]
+
+      break if x < 0 || y < 0 || x >= current_tiles.first.count || y >= current_tiles.count
+
+      visible_tile = current_tiles[y][x]
+
+      if (visible_tile.seat?)
+        visible_seat = visible_tile
+        break
+      end
+    end
+
+    visible_seat
+  end
 end
 
-tile_states = [TileState.new(tiles: TileCreator.create_from_raw)]
+tile_states_for_adjacent = [TileState.new(tiles: TileCreator.create_from_raw)]
 
 simulator = SeatingSimulator.new
-while (tile_states.count <= 1 || !(tile_states.last == tile_states[-2])) do
-  tile_states.push(simulator.generate_next_state(tile_state: tile_states.last))
+while (tile_states_for_adjacent.count <= 1 || !(tile_states_for_adjacent.last == tile_states_for_adjacent[-2])) do
+  tile_states_for_adjacent.push(simulator.generate_next_state_for_adjacent(tile_state: tile_states_for_adjacent.last))
 end
 
-print "Num occupied seats at equalibrium: ", tile_states.last.num_occupied_seats, "\n"
+print "Num occupied seats at equalibrium: ", tile_states_for_adjacent.last.num_occupied_seats, "\n"
+
+tile_states_for_visible = [TileState.new(tiles: TileCreator.create_from_raw)]
+
+while (tile_states_for_visible.count <= 1 || !(tile_states_for_visible.last == tile_states_for_visible[-2])) do
+  tile_states_for_visible.push(simulator.generate_next_state_for_visible(tile_state: tile_states_for_visible.last))
+end
+
+print "Num occupied seats at equalibrium: ", tile_states_for_visible.last.num_occupied_seats, "\n"

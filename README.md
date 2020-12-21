@@ -70,3 +70,10 @@ In each group the first and last adapters needed to be used, otherwise you could
 Once each group had a score, I multiplied them all together to find the total number of combinations 🎉 It was running in a fraction of a section as well instead of taking forever like my original solution. It didn't quite get me the right answer first go but that was because I didn't factor in combinations at the very start of the sequence, where the `1` adapter was skipped and went straight to `2`. Easy fix and another completed challenge.
 
 I'm not sure how well this would scale to handle more variations, like a joltage increment of 2 where my rules above would change. I assume through with some tweaking it would be fit for those cases as well though. No idea how others solved it but I'm pretty proud of this 🙌
+
+### Day 11 - ✅ - [check it out!](https://github.com/timjcook/advent-of-code-2020/blob/master/ferry-seat-planner.rb)
+I had a pretty good plan for how I was going to do this one from the get-go. The challenge was in the state management. I had a bit of fun defining the `Tile` and `TileState` classes and defining dedicated `==` methods on them to compare two tiles or two states. I seemed to be getting `!=` for free after I defined `==`, I'm not sure if that was true or not, but when I hit a few issues I defined them, just to be safe.
+
+For Challenge 2, when iterating in a field of view from any given point, I created a method that took a block so I could reuse it with a different coordinate transform function, depending on which way someone was looking. I was pretty happy with that 😎
+
+I did run into a few issues with getting an answer that turned out to be wrong but they were all case of off by one errors or one time I used `x` instead of `y` and vice-versa. Just annoying things. This challenge was fun!
