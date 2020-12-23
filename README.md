@@ -77,3 +77,7 @@ I had a pretty good plan for how I was going to do this one from the get-go. The
 For Challenge 2, when iterating in a field of view from any given point, I created a method that took a block so I could reuse it with a different coordinate transform function, depending on which way someone was looking. I was pretty happy with that 😎
 
 I did run into a few issues with getting an answer that turned out to be wrong but they were all case of off by one errors or one time I used `x` instead of `y` and vice-versa. Just annoying things. This challenge was fun!
+
+### Day 12 - ✅ - [check it out!](https://github.com/timjcook/advent-of-code-2020/blob/master/safe-passage-plotter.rb)
+Nothing too crazy jumped out for this one. I found that the solution for Challenge 1 flowed really nicely into Challenge 2. Main little challenge was calculating the new `x` and `y` when the ferry turned according to the waypoint.
+I had a bit of fun after solving Challenge 2 in refactoring into a specific `InstructionActioner` that could be passed in to a `Ferry` based on if the ferry executed actions based on movement (Challenge 1) or the waypoint (Challenge 2).
