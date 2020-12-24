@@ -81,3 +81,14 @@ I did run into a few issues with getting an answer that turned out to be wrong b
 ### Day 12 - ✅ - [check it out!](https://github.com/timjcook/advent-of-code-2020/blob/master/safe-passage-plotter.rb)
 Nothing too crazy jumped out for this one. I found that the solution for Challenge 1 flowed really nicely into Challenge 2. Main little challenge was calculating the new `x` and `y` when the ferry turned according to the waypoint.
 I had a bit of fun after solving Challenge 2 in refactoring into a specific `InstructionActioner` that could be passed in to a `Ferry` based on if the ferry executed actions based on movement (Challenge 1) or the waypoint (Challenge 2).
+
+### Day 13 - ✅ - [check it out!](https://github.com/timjcook/advent-of-code-2020/blob/master/shuttle-optimiser.rb)
+After hearing from friends that this day took some figuring out I was prepped to get some thinking on. My guess is that Challenge 1 wasn't the issue, it just gives us a helpful function to check a specific timestamp for arriving shuttles.
+
+I started with a naïve approach of checking each timestamp to see if the pattern of sequential shuttles appeared. I made a few modifications to this to optimise and short circuit if a sequence is never going to work but it was pretty clear that the point of this problem required me to think a little differently.
+Spending a bit of time thinking about it, I realised that because there is no upper limit we can define, it's infinite, it was going to take a more effective way to improve performance.
+
+I realised from some simpler examples that even the start of the pattern (first two active shuttles) only appeared according to a certain pattern that repeated each interval so I figured that if I could find that interval for `x` shuttles, that would help me to find it for `x + 1` as I would only have to increase the timestamp by the interval I found before.
+Turns out that the relationship for that interval is just the product of the individual intervals of each shuttle (stumbled upon this from simpler examples but it makes sense as the product will be a guaranteed number that each interval is a factor of).
+
+A little bit of recursion, applying the previous result to the next set of shuttles and we get our answer! All aboard!! 🚌
